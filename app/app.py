@@ -119,9 +119,9 @@ HTML = """
                 <tr>
                     <th>Year</th>
                     <th>Balance BoY</th>
-                    <th>Yearly Contributed</th>
-                    <th>Yearly Interest Earned</th>
-                    <th>Total Interest Earned</th>
+                    <th>Cumulative contribution EoY</th>
+                    <th>Yearly interest earned EoY</th>
+                    <th>Cumulative interest earned EoY</th>
                     <th>Balance EoY</th>
                 </tr>
             </thead>
@@ -205,7 +205,7 @@ def calculator():
         balance_eoy_data = [balance_end_of_year]
         
 
-        total_contributed = P
+        total_contributed = contributed_data[-1]
         # Calculate for each year
         for year_i in range(2, total_years + 1):
 
@@ -223,8 +223,8 @@ def calculator():
             balance_boy_data.append(balance_begining_of_year)
             contributed_data.append(total_contributed)
             yearly_interest_data.append(yearly_interest_earned)
-            balance_eoy_data.append(balance_end_of_year)
             total_interest_data.append(total_interest_data[-1] + yearly_interest_earned)
+            balance_eoy_data.append(balance_end_of_year)
 
         final_balance = balance_eoy_data[-1]
         final_interest = balance_eoy_data[-1] - total_contributed
@@ -259,16 +259,37 @@ def calculator():
             mode='lines',
             name='Total Contributions',
             line=dict(color='#1f77b4'),
-            fill='tonexty'
+            fill='tonexty',
+            stackgroup='one',
         ))
         
+        # Option A — stacked area: put contributions and interest in the same stackgroup so they stack
+        # (both this trace and the 'Total Contributions' trace should use the same stackgroup)
+        fig.add_trace(go.Scatter(
+            x=year_data,
+            y=total_interest_data,
+            mode='lines',
+            name='Interest Earned (stacked)',
+            line=dict(color='#ff7f0e'),
+            fill='tonexty',
+            stackgroup='one',
+            fillcolor='rgba(255,127,14,0.5)'
+        ))
+
+        # Option B — render interest visually "on top" of the Total Balance line:
+        # Plotly draws traces in the order they are added; to have the interest trace
+        # appear above the 'Total Balance' trace you must add it after that trace.
+        # Move the following block so it comes after the fig.add_trace(...) for 'Total Balance':
+        #
         # fig.add_trace(go.Scatter(
         #     x=year_data,
-        #     y=interest_data,
+        #     y=yearly_interest_data,
         #     mode='lines',
-        #     name='Interest Earned',
-        #     line=dict(color='#ff7f0e'),
-        #     fill='tonexty'
+        #     name='Interest Earned (on top)',
+        #     line=dict(color='#ff7f0e', width=3),
+        #     fill='tozeroy',
+        #     fillcolor='rgba(255,127,14,0.25)',
+        #     opacity=0.9
         # ))
         
         fig.add_trace(go.Scatter(

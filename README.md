@@ -32,7 +32,7 @@ Screenshot of the calculator UI (form, chart and breakdown table).
 
 ## Prerequisites
 
-- Python 3.8+ (tested with 3.11/3.12)
+- Python 3.11+ (tested with 3.13)
 - pip
 - For Docker deployment: Docker and Docker Compose (optional)
 
