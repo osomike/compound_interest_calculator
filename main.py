@@ -12,11 +12,14 @@ HTML = """
     <title>Compound Interest Calculator</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; max-width: 1200px; }
+        body { font-family: Arial, sans-serif; margin: 40px; max-width: 1400px; }
         input, select { margin: 5px; padding: 5px; }
         .result { margin-top: 20px; font-size: 1.2em; }
-        .chart-container { margin-top: 30px; }
+        .main-layout { display: flex; gap: 30px; margin-bottom: 30px; }
+        .left-column { flex: 1; min-width: 400px; }
+        .right-column { flex: 1; min-width: 600px; }
         .form-container { background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .table-container { margin-top: 30px; }
         .breakdown-table { 
             width: 100%; 
@@ -56,44 +59,59 @@ HTML = """
 <body>
     <h1>Compound Interest Calculator</h1>
     
-    <div class="form-container">
-        <form method="POST">
-            <label>Initial amount: €</label>
-            <input type="number" name="principal" value="{{ form_values.principal }}"><br>
+    <div class="main-layout">
+        <div class="left-column">
+            <div class="form-container">
+                <form method="POST">
+                    <label>Initial amount: €</label>
+                    <input type="number" name="principal" value="{{ form_values.principal }}"><br>
+                    
+                    <label>Years:</label>
+                    <input type="number" name="years" value="{{ form_values.years }}"><br>
+                    
+                    <label>Rate (%):</label>
+                    <input type="number" step="0.01" name="rate" value="{{ form_values.rate }}"><br>
+                    
+                    <label>Recurring contribution: €</label>
+                    <input type="number" name="contrib" value="{{ form_values.contrib }}"><br>
+                    
+                    <label>Contribution frequency:</label>
+                    <select name="contrib_frequency">
+                        <option value="1" {% if form_values.contrib_frequency == "1" %}selected{% endif %}>Annually</option>
+                        <option value="12" {% if form_values.contrib_frequency == "12" %}selected{% endif %}>Monthly</option>
+                    </select><br>
+                    
+                    <label>Compound frequency:</label>
+                    <select name="compound_frequency">
+                        <option value="1" {% if form_values.compound_frequency == "1" %}selected{% endif %}>Annually</option>
+                        <option value="12" {% if form_values.compound_frequency == "12" %}selected{% endif %}>Monthly</option>
+                    </select><br>
+                    
+                    <input type="submit" value="Calculate" style="margin-top: 10px; padding: 10px 20px; background-color: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                </form>
+            </div>
             
-            <label>Years:</label>
-            <input type="number" name="years" value="{{ form_values.years }}"><br>
-            
-            <label>Rate (%):</label>
-            <input type="number" step="0.01" name="rate" value="{{ form_values.rate }}"><br>
-            
-            <label>Recurring contribution: €</label>
-            <input type="number" name="contrib" value="{{ form_values.contrib }}"><br>
-            
-            <label>Contribution frequency:</label>
-            <select name="contrib_frequency">
-                <option value="1" {% if form_values.contrib_frequency == "1" %}selected{% endif %}>Annually</option>
-                <option value="12" {% if form_values.contrib_frequency == "12" %}selected{% endif %}>Monthly</option>
-            </select><br>
-            
-            <label>Compound frequency:</label>
-            <select name="compound_frequency">
-                <option value="1" {% if form_values.compound_frequency == "1" %}selected{% endif %}>Annually</option>
-                <option value="12" {% if form_values.compound_frequency == "12" %}selected{% endif %}>Monthly</option>
-            </select><br>
-            
-            <input type="submit" value="Calculate" style="margin-top: 10px; padding: 10px 20px; background-color: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer;">
-        </form>
+            {% if result %}
+            <div class="result">
+                <h3>Results:</h3>
+                <p><strong>Final Balance:</strong> €{{ result["total"] }}</p>
+                <p>Total Contributed: €{{ result["contributed"] }}</p>
+                <p>Interest Earned: €{{ result["interest"] }}</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="right-column">
+            {% if result %}
+            <div class="chart-container">
+                <h3>Growth Over Time</h3>
+                <div id="chart" style="width:100%; height:500px;"></div>
+            </div>
+            {% endif %}
+        </div>
     </div>
     
     {% if result %}
-    <div class="result">
-        <h3>Results:</h3>
-        <p><strong>Final Balance:</strong> €{{ result["total"] }}</p>
-        <p>Total Contributed: €{{ result["contributed"] }}</p>
-        <p>Interest Earned: €{{ result["interest"] }}</p>
-    </div>
-    
     <div class="table-container">
         <h3>Year-by-Year Breakdown:</h3>
         <table class="breakdown-table">
@@ -120,10 +138,6 @@ HTML = """
         </table>
     </div>
     
-    <div class="chart-container">
-        <div id="chart" style="width:100%; height:500px;"></div>
-    </div>
-    
     <script>
         var graphData = {{ chart_json|safe }};
         Plotly.newPlot('chart', graphData.data, graphData.layout);
@@ -147,6 +161,7 @@ def calculator():
     }
     
     if request.method == "POST":
+        print("POST request received")
         # Store form values to maintain them after submission
         form_values = {
             "principal": request.form["principal"],
@@ -163,6 +178,13 @@ def calculator():
         periodic_contribution = float(request.form["contrib"])
         n_compounds_per_year = int(request.form["compound_frequency"])  # compounding frequency
         n_contrib_per_year = int(request.form["contrib_frequency"])    # contribution frequency
+        
+        print(f"Calculating for {total_years} years with rate {r}")
+        
+        # Safety check to prevent infinite loops
+        if total_years > 50:
+            total_years = 50
+            print("Limited years to 50 for safety")
         
 
 
@@ -189,7 +211,7 @@ def calculator():
 
             # Calculate interest and end of year balance
             yearly_interest_earned = round(balance_begining_of_year * r, 2)
-            balance_end_of_year = balance_begining_of_year + yearly_interest_earned + new_yearly_contribution
+            balance_end_of_year = round(balance_begining_of_year + yearly_interest_earned + new_yearly_contribution, 2)
 
             total_contributed += new_yearly_contribution
 
@@ -222,6 +244,7 @@ def calculator():
         }
 
         # Create Plotly chart
+        print("Creating Plotly chart...")
         fig = go.Figure()
 
         # Add traces
@@ -272,9 +295,16 @@ def calculator():
         fig.update_yaxes(tickformat='€,.0f')
         
         # Convert to JSON
+        print("Converting chart to JSON...")
         chart_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        print("Chart conversion completed")
     
+    print("Rendering template...")
     return render_template_string(HTML, result=result, chart_json=chart_json, form_values=form_values)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    print("Starting Flask application...")
+    try:
+        app.run(debug=True, host='127.0.0.1', port=5000)
+    except Exception as e:
+        print(f"Error starting app: {e}")
