@@ -121,6 +121,7 @@ HTML = """
                     <th>Balance BoY</th>
                     <th>Yearly Contributed</th>
                     <th>Yearly Interest Earned</th>
+                    <th>Total Interest Earned</th>
                     <th>Balance EoY</th>
                 </tr>
             </thead>
@@ -131,6 +132,7 @@ HTML = """
                     <td>€{{ row.balance_boy }}</td>
                     <td>€{{ row.new_yearly_contributions }}</td>
                     <td>€{{ row.interest_earned }}</td>
+                    <td>€{{ row.total_interest }}</td>
                     <td>€{{ row.balance_eoy }}</td>
                 </tr>
                 {% endfor %}
@@ -198,7 +200,8 @@ def calculator():
         year_data = [1]
         balance_boy_data = [balance_begining_of_year]
         contributed_data = [new_yearly_contribution + P]
-        interest_data = [yearly_interest_earned]
+        yearly_interest_data = [yearly_interest_earned]
+        total_interest_data = [yearly_interest_earned]
         balance_eoy_data = [balance_end_of_year]
         
 
@@ -219,8 +222,9 @@ def calculator():
             year_data.append(year_i)
             balance_boy_data.append(balance_begining_of_year)
             contributed_data.append(total_contributed)
-            interest_data.append(yearly_interest_earned)
+            yearly_interest_data.append(yearly_interest_earned)
             balance_eoy_data.append(balance_end_of_year)
+            total_interest_data.append(total_interest_data[-1] + yearly_interest_earned)
 
         final_balance = balance_eoy_data[-1]
         final_interest = balance_eoy_data[-1] - total_contributed
@@ -232,7 +236,8 @@ def calculator():
                 "year": year_data[i],
                 "balance_boy": f"{balance_boy_data[i]:,.2f}",
                 "new_yearly_contributions": f"{contributed_data[i]:,.2f}",
-                "interest_earned": f"{interest_data[i]:,.2f}",
+                "interest_earned": f"{yearly_interest_data[i]:,.2f}",
+                "total_interest": f"{total_interest_data[i]:,.2f}",
                 "balance_eoy": f"{balance_eoy_data[i]:,.2f}"
             })
         
@@ -281,7 +286,14 @@ def calculator():
             yaxis_title='Amount (€)',
             hovermode='x unified',
             template='plotly_white',
-            height=500
+            height=500,
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.2,
+                xanchor="center",
+                x=0.5
+            )
         )
         
         # Format x-axis to start at 1 and show integer ticks
