@@ -42,6 +42,49 @@ The calculator displays:
    pip install -r requirements.txt
    ```
 
+## Docker Deployment
+
+### Option 1: Using Docker Compose (Recommended)
+
+1. **Build and run with Docker Compose**:
+   ```bash
+   docker-compose up --build
+   ```
+
+2. **Run in background**:
+   ```bash
+   docker-compose up -d --build
+   ```
+
+3. **Stop the application**:
+   ```bash
+   docker-compose down
+   ```
+
+### Option 2: Using Docker directly
+
+1. **Build the Docker image**:
+   ```bash
+   docker build -t compound-interest-calculator .
+   ```
+
+2. **Run the container**:
+   ```bash
+   docker run -p 5000:5000 compound-interest-calculator
+   ```
+
+3. **Run in background**:
+   ```bash
+   docker run -d -p 5000:5000 --name compound-calculator compound-interest-calculator
+   ```
+
+### Docker Commands
+
+- **View logs**: `docker-compose logs -f`
+- **Stop container**: `docker-compose stop`
+- **Remove container**: `docker-compose down`
+- **Rebuild**: `docker-compose up --build --force-recreate`
+
 ## Usage
 
 1. **Start the application**:
@@ -69,10 +112,15 @@ The calculator displays:
 
 ## Dependencies
 
+### Python Dependencies
 - **Flask**: Web framework
 - **Plotly**: Interactive charting library
 
 See `requirements.txt` for specific versions.
+
+### Docker (Alternative)
+- **Docker Engine**: Container runtime
+- **Docker Compose**: For easy orchestration (optional)
 
 ## Project Structure
 
@@ -80,6 +128,9 @@ See `requirements.txt` for specific versions.
 compound_interest_calculator/
 ├── main.py              # Main Flask application
 ├── requirements.txt     # Python dependencies
+├── Dockerfile          # Docker container configuration
+├── docker-compose.yml  # Docker Compose orchestration
+├── .dockerignore       # Docker build exclusions
 ├── README.md           # This file
 └── .venv/              # Virtual environment (created after setup)
 ```
@@ -130,4 +181,49 @@ The calculator uses compound interest principles:
 - Responsive CSS design for desktop usage
 - Debug mode enabled for development
 - European currency formatting (€)
+
+## Deployment
+
+### Docker Deployment
+
+The application is fully containerized and can be deployed using Docker:
+
+1. **Prerequisites**: Install Docker and Docker Compose on your system
+
+2. **Build and run with Docker Compose**:
+   ```bash
+   docker-compose up --build
+   ```
+
+3. **Access the application**:
+   - Open your browser to `http://localhost:5000`
+   - The application will be running in a production-ready container
+
+4. **Stop the application**:
+   ```bash
+   docker-compose down
+   ```
+
+### Manual Deployment
+
+For manual deployment without Docker:
+
+1. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Run the application**:
+   ```bash
+   python main.py
+   ```
+
+3. **Access at**: `http://localhost:5000`
+
+### Production Considerations
+
+- The Docker setup includes health checks and security hardening
+- For production deployment, consider using a reverse proxy (nginx)
+- Environment variables can be configured in docker-compose.yml
+- The application is designed to handle reasonable load for personal use
 
